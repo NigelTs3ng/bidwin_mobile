@@ -16,10 +16,6 @@ if [ ! -f "build/web/vercel.json" ]; then
 {
   "rewrites": [
     {
-      "source": "/(.*\\.(js|css|wasm|png|jpg|jpeg|gif|svg|ico|json|woff|woff2|ttf|otf))",
-      "destination": "/$1"
-    },
-    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
