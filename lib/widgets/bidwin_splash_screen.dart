@@ -33,6 +33,14 @@ class BidWinSplashScreen extends StatelessWidget {
               child: Image.asset(
                 'lib/assets/images/bidwin_logo_rv.png',
                 fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  // Fallback if image fails to load
+                  return const Icon(
+                    Icons.shopping_bag,
+                    size: 120,
+                    color: Colors.white,
+                  );
+                },
               ),
             ),
             const SizedBox(height: 28),

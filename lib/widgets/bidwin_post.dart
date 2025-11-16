@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/bidwin_theme.dart';
 
-class BidWinPost extends StatelessWidget {
+class BidWinPost extends StatefulWidget {
   const BidWinPost({
     super.key,
     required this.type,
@@ -21,12 +21,72 @@ class BidWinPost extends StatelessWidget {
   final double? ticketPrice;
 
   @override
+  State<BidWinPost> createState() => _BidWinPostState();
+}
+
+class _BidWinPostState extends State<BidWinPost> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  void _showBidDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => _BidDialog(
+        currentPrice: widget.currentPrice ?? 0.0,
+        onBidSubmitted: () {
+          Navigator.of(context).pop();
+          _showBidSuccessDialog(context);
+        },
+      ),
+    );
+  }
+
+  void _showBidSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: BidWinTheme.cardBackground,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 64,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Bid submitted successfully',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final isLive = type == 'live_auction';
-    final isRaffle = type == 'raffle';
-    final isMarket = type == 'market' || type == 'market_item';
+    final isLive = widget.type == 'live_auction';
+    final isRaffle = widget.type == 'raffle';
+    final isMarket = widget.type == 'market' || widget.type == 'market_item';
 
     late final String typeLabel;
     late final Color pillColor;
@@ -41,7 +101,7 @@ class BidWinPost extends StatelessWidget {
       primaryActionLabel = 'Bid Now';
       priceWidget = _PriceText(
         label: 'Current Bid',
-        value: currentPrice != null ? '\$${currentPrice!.toStringAsFixed(2)}' : '--',
+        value: widget.currentPrice != null ? '\$${widget.currentPrice!.toStringAsFixed(2)}' : '--',
       );
     } else if (isRaffle) {
       typeLabel = 'RAFFLE';
@@ -50,7 +110,7 @@ class BidWinPost extends StatelessWidget {
       primaryActionLabel = 'Buy Ticket';
       priceWidget = _PriceText(
         label: 'Ticket Price',
-        value: ticketPrice != null ? '\$${ticketPrice!.toStringAsFixed(2)}' : '--',
+        value: widget.ticketPrice != null ? '\$${widget.ticketPrice!.toStringAsFixed(2)}' : '--',
       );
     } else if (isMarket) {
       typeLabel = 'MARKET';
@@ -59,10 +119,10 @@ class BidWinPost extends StatelessWidget {
       primaryActionLabel = 'Buy Now';
       priceWidget = _PriceText(
         label: 'Price',
-        value: currentPrice != null ? '\$${currentPrice!.toStringAsFixed(2)}' : '--',
+        value: widget.currentPrice != null ? '\$${widget.currentPrice!.toStringAsFixed(2)}' : '--',
       );
     } else {
-      typeLabel = type.toUpperCase();
+      typeLabel = widget.type.toUpperCase();
       pillColor = Colors.white;
       accentColor = Colors.white;
       primaryActionLabel = 'Explore';
@@ -141,7 +201,7 @@ class BidWinPost extends StatelessWidget {
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                timeRemaining,
+                                widget.timeRemaining,
                                 style: theme.textTheme.bodyMedium?.copyWith(
                                   color: Colors.white70,
                                   fontWeight: FontWeight.w600,
@@ -151,7 +211,7 @@ class BidWinPost extends StatelessWidget {
                           ),
                           const Spacer(),
                           Text(
-                            title,
+                            widget.title,
                             style: theme.textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.w800,
                               height: 1.1,
@@ -159,31 +219,20 @@ class BidWinPost extends StatelessWidget {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Seller: $sellerName',
+                            'Seller: ${widget.sellerName}',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: Colors.white70,
                             ),
                           ),
                           const SizedBox(height: 16),
                           priceWidget,
-                          const SizedBox(height: 24),
-                          SizedBox(
-                            width: 160,
-                            child: FilledButton(
-                              style: FilledButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                backgroundColor: accentColor,
-                                foregroundColor: isMarket ? BidWinTheme.red : Colors.white,
-                                textStyle: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              onPressed: () {
-                                // TODO: integrate Stripe for payments / ticket buys
-                              },
-                              child: Text(primaryActionLabel),
+                          if (isLive && widget.currentPrice != null) ...[
+                            const SizedBox(height: 32),
+                            _BidButtons(
+                              currentPrice: widget.currentPrice!,
+                              onBidPressed: () => _showBidDialog(context),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),
@@ -290,6 +339,475 @@ class _ActionBar extends StatelessWidget {
           style: iconStyle,
         ),
       ],
+    );
+  }
+}
+
+class _BidButtons extends StatelessWidget {
+  const _BidButtons({
+    required this.currentPrice,
+    required this.onBidPressed,
+  });
+
+  final double currentPrice;
+  final VoidCallback onBidPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          // Bid Now Button (left, red)
+          Expanded(
+            flex: 2,
+            child: Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: BidWinTheme.red,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: TextButton(
+                onPressed: onBidPressed,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  'Bid Now',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Buy Now Slider (right, yellow)
+          Expanded(
+            flex: 3,
+            child: _BuyNowSlider(
+              currentPrice: currentPrice,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BuyNowSlider extends StatefulWidget {
+  const _BuyNowSlider({
+    required this.currentPrice,
+  });
+
+  final double currentPrice;
+
+  @override
+  State<_BuyNowSlider> createState() => _BuyNowSliderState();
+}
+
+class _BuyNowSliderState extends State<_BuyNowSlider>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _snapBackAnimation;
+  double _sliderPosition = 0.0;
+  bool _isCompleted = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _snapBackAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    _snapBackAnimation.addListener(() {
+      if (mounted && !_isCompleted) {
+        setState(() {
+          _sliderPosition = _snapBackAnimation.value;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onPanUpdate(DragUpdateDetails details) {
+    if (_isCompleted) return;
+
+    // Stop any ongoing animation
+    if (_controller.isAnimating) {
+      _controller.stop();
+      _controller.reset();
+    }
+
+    final RenderBox? box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    
+    final double width = box.size.width;
+    final double delta = details.delta.dx;
+    
+    // Calculate thumb width dynamically (approximate based on content)
+    final thumbWidth = 200.0; // Approximate width of the yellow pill
+
+    setState(() {
+      _sliderPosition = (_sliderPosition + delta).clamp(0.0, width - thumbWidth);
+      
+      // Check if slider reached the end (with some threshold)
+      if (_sliderPosition >= width - thumbWidth - 10) {
+        _isCompleted = true;
+        _handleBuyNow();
+      }
+    });
+  }
+
+  void _onPanEnd(DragEndDetails details) {
+    if (_isCompleted) return;
+
+    // Snap back if not completed
+    final startPosition = _sliderPosition;
+    _snapBackAnimation = Tween<double>(begin: startPosition, end: 0.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    
+    _controller.forward(from: 0.0).then((_) {
+      if (mounted) {
+        _controller.reset();
+      }
+    });
+  }
+
+  void _handleBuyNow() {
+    final estimatedPrice = widget.currentPrice * 1.1;
+    
+    // TODO: Handle buy now action - submit purchase
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: BidWinTheme.cardBackground,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.check_circle,
+              color: Colors.green,
+              size: 64,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Purchase successful!',
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'est. \$${estimatedPrice.toStringAsFixed(2)}',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white70,
+                  ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              setState(() {
+                _sliderPosition = 0.0;
+                _isCompleted = false;
+              });
+            },
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final estimatedPrice = widget.currentPrice * 1.1;
+
+    return Container(
+      height: 56,
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1F26),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.1),
+          width: 1.5,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Background chevrons (visible when slider is not covering)
+          Positioned.fill(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Icon(
+                    Icons.chevron_right,
+                    color: Colors.white.withOpacity(0.3),
+                    size: 18,
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: Colors.white.withOpacity(0.3),
+                    size: 18,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Slider thumb (yellow pill with text and price)
+          Positioned(
+            left: _sliderPosition,
+            top: 0,
+            bottom: 0,
+            child: GestureDetector(
+              onPanUpdate: _onPanUpdate,
+              onPanEnd: _onPanEnd,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEB3B),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: Colors.black,
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Buy Now',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'est. \$${estimatedPrice.toStringAsFixed(2)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.black87,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.chevron_right,
+                          color: Colors.black,
+                          size: 18,
+                        ),
+                        Icon(
+                          Icons.chevron_right,
+                          color: Colors.black,
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BidDialog extends StatefulWidget {
+  const _BidDialog({
+    required this.currentPrice,
+    required this.onBidSubmitted,
+  });
+
+  final double currentPrice;
+  final VoidCallback onBidSubmitted;
+
+  @override
+  State<_BidDialog> createState() => _BidDialogState();
+}
+
+class _BidDialogState extends State<_BidDialog> {
+  final _bidAmountController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _bidAmountController.text = widget.currentPrice.toStringAsFixed(2);
+  }
+
+  @override
+  void dispose() {
+    _bidAmountController.dispose();
+    super.dispose();
+  }
+
+  void _submitBid() {
+    if (_formKey.currentState!.validate()) {
+      final bidAmount = double.tryParse(_bidAmountController.text);
+      if (bidAmount != null && bidAmount >= widget.currentPrice) {
+        // TODO: Submit bid to backend
+        widget.onBidSubmitted();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Bid amount must be at least \$${widget.currentPrice.toStringAsFixed(2)}',
+            ),
+            backgroundColor: BidWinTheme.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Dialog(
+      backgroundColor: BidWinTheme.cardBackground,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    'Place a Bid',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Spacer(),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white70),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Current Bid: \$${widget.currentPrice.toStringAsFixed(2)}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: Colors.white70,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _bidAmountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Bid Amount',
+                  hintText: 'Enter bid amount',
+                  prefixText: '\$ ',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.05),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a bid amount';
+                  }
+                  final amount = double.tryParse(value);
+                  if (amount == null) {
+                    return 'Please enter a valid number';
+                  }
+                  if (amount < widget.currentPrice) {
+                    return 'Bid must be at least \$${widget.currentPrice.toStringAsFixed(2)}';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 32),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(color: Colors.white.withOpacity(0.3)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Cancel',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: _submitBid,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: BidWinTheme.red,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        'Submit Bid',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

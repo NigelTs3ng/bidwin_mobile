@@ -2,8 +2,16 @@ import 'package:flutter/material.dart';
 
 import '../widgets/bidwin_post.dart';
 
-class HomeFeedScreen extends StatelessWidget {
+class HomeFeedScreen extends StatefulWidget {
   const HomeFeedScreen({super.key});
+
+  @override
+  State<HomeFeedScreen> createState() => _HomeFeedScreenState();
+}
+
+class _HomeFeedScreenState extends State<HomeFeedScreen> {
+  final PageController _pageController = PageController();
+  double _scrollProgress = 0.0;
 
   static final List<Map<String, dynamic>> _mockFeed = [
     {
@@ -44,10 +52,34 @@ class HomeFeedScreen extends StatelessWidget {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _pageController.addListener(_updateScrollProgress);
+  }
+
+  @override
+  void dispose() {
+    _pageController.removeListener(_updateScrollProgress);
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _updateScrollProgress() {
+    if (_pageController.hasClients) {
+      final currentPage = _pageController.page ?? 0.0;
+      setState(() {
+        // Calculate fade based on scroll progress (fade out over first 0.5 pages)
+        _scrollProgress = (currentPage * 2).clamp(0.0, 1.0);
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Stack(
       children: [
         PageView.builder(
+          controller: _pageController,
           scrollDirection: Axis.vertical,
           itemCount: _mockFeed.length,
           itemBuilder: (context, index) {
@@ -63,34 +95,17 @@ class HomeFeedScreen extends StatelessWidget {
           },
         ),
         Positioned(
-          top: 12,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.35),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                'BidWin',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-            ),
-          ),
-        ),
-        const Positioned(
           bottom: 18,
           left: 20,
-          child: Text(
-            'Swipe up for more',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 12,
-              letterSpacing: 1.1,
+          child: Opacity(
+            opacity: 1.0 - _scrollProgress,
+            child: const Text(
+              'Swipe up for more',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 12,
+                letterSpacing: 1.1,
+              ),
             ),
           ),
         ),
