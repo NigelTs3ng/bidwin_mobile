@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'screens/home_feed_screen.dart';
 import 'screens/user_activity_screen.dart';
 import 'theme/bidwin_theme.dart';
+import 'widgets/bidwin_splash_screen.dart';
 
 class BidWinApp extends StatelessWidget {
   const BidWinApp({super.key});
@@ -28,11 +29,22 @@ class BidWinHomeShell extends StatefulWidget {
 class _BidWinHomeShellState extends State<BidWinHomeShell> {
   late final PageController _pageController;
   int _currentIndex = 0;
+  bool _splashVisible = true;
+  bool _hideSplash = false;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 1400), () {
+        if (mounted) {
+          setState(() {
+            _splashVisible = false;
+          });
+        }
+      });
+    });
   }
 
   @override
@@ -80,6 +92,22 @@ class _BidWinHomeShellState extends State<BidWinHomeShell> {
                 ),
               ),
             ),
+            if (!_hideSplash)
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: !_splashVisible,
+                  child: AnimatedOpacity(
+                    opacity: _splashVisible ? 1 : 0,
+                    duration: const Duration(milliseconds: 600),
+                    onEnd: () {
+                      if (!_splashVisible) {
+                        setState(() => _hideSplash = true);
+                      }
+                    },
+                    child: const BidWinSplashScreen(),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
