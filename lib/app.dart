@@ -15,6 +15,15 @@ class BidWinApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: BidWinTheme.themeData,
       home: const BidWinHomeShell(),
+      // Prevent text scaling on web/mobile for consistent UI
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(1.0),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }

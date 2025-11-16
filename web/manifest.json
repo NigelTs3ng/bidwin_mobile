@@ -1,11 +1,11 @@
 {
-    "name": "bidwin_mobile",
-    "short_name": "bidwin_mobile",
+    "name": "BidWin",
+    "short_name": "BidWin",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0F1115",
+    "theme_color": "#E53935",
+    "description": "Bid, Win, and Discover amazing auctions, raffles, and market items.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

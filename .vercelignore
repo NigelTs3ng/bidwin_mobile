@@ -1,0 +1,15 @@
+.dart_tool/
+.idea/
+.metadata
+build/
+ios/
+android/
+linux/
+macos/
+windows/
+test/
+*.iml
+.DS_Store
+*.lock
+pubspec.lock
+
