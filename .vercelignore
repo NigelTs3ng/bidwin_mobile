@@ -1,7 +1,11 @@
 .dart_tool/
 .idea/
 .metadata
-build/
+build/android/
+build/ios/
+build/linux/
+build/macos/
+build/windows/
 ios/
 android/
 linux/
@@ -12,4 +16,13 @@ test/
 .DS_Store
 *.lock
 pubspec.lock
+lib/
+pubspec.yaml
+analysis_options.yaml
+README.md
+DEPLOYMENT_GUIDE.md
+VERCEL_DEPLOY.md
+VERCEL_FIX.md
+build.sh
+deploy-vercel.sh
 

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "chmod +x build.sh && ./build.sh",
+  "buildCommand": "",
   "outputDirectory": "build/web",
-  "installCommand": "flutter pub get",
+  "installCommand": "",
   "framework": null,
   "rewrites": [
     {
