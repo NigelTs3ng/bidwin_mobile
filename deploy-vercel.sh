@@ -9,6 +9,25 @@ if [ ! -d "build/web" ]; then
     flutter build web --release
 fi
 
+# Ensure vercel.json is in build/web
+if [ ! -f "build/web/vercel.json" ]; then
+    echo "📋 Creating vercel.json in build/web..."
+    cat > build/web/vercel.json << 'EOF'
+{
+  "rewrites": [
+    {
+      "source": "/(.*\\.(js|css|wasm|png|jpg|jpeg|gif|svg|ico|json|woff|woff2|ttf|otf))",
+      "destination": "/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+EOF
+fi
+
 # Check if vercel CLI is installed
 if ! command -v vercel &> /dev/null; then
     echo "❌ Vercel CLI not found. Installing..."
