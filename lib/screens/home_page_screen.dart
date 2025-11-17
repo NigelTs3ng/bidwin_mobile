@@ -7,10 +7,12 @@ class HomePageScreen extends StatefulWidget {
     super.key,
     this.onNavigateToAccount,
     this.onNavigateToFeed,
+    this.onNavigateToActivity,
   });
 
   final VoidCallback? onNavigateToAccount;
   final VoidCallback? onNavigateToFeed;
+  final VoidCallback? onNavigateToActivity;
 
   @override
   State<HomePageScreen> createState() => _HomePageScreenState();
@@ -73,11 +75,14 @@ class _HomePageScreenState extends State<HomePageScreen> {
       // Home - stay on same screen
       setState(() => _selectedBottomNav = 0);
       return;
+    } else if (index == 3) {
+      // Activity - navigate to ActivityScreen via PageView
+      widget.onNavigateToActivity?.call();
     } else if (index == 4) {
       // Account - navigate to UserActivityScreen via PageView
       widget.onNavigateToAccount?.call();
     } else {
-      // Categories, Sell, Activity - placeholder
+      // Categories, Sell - placeholder
       setState(() => _selectedBottomNav = index);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -109,6 +114,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: TextField(
+                        textAlignVertical: TextAlignVertical.center,
                         decoration: InputDecoration(
                           hintText: 'Search slabs',
                           hintStyle: theme.textTheme.bodyMedium?.copyWith(
@@ -116,7 +122,11 @@ class _HomePageScreenState extends State<HomePageScreen> {
                           ),
                           prefixIcon: const Icon(Icons.search, color: Colors.white70),
                           border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          isDense: true,
                         ),
                       ),
                     ),
@@ -160,6 +170,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                         color: isSelected ? Colors.black : category['color'],
                       ),
                       selected: isSelected,
+                      showCheckmark: false,
                       onSelected: (selected) {
                         setState(() {
                           for (var cat in _categories) {

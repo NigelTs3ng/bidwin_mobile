@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'screens/activity_screen.dart';
 import 'screens/home_feed_screen.dart';
 import 'screens/home_page_screen.dart';
 import 'screens/user_activity_screen.dart';
@@ -78,7 +79,7 @@ class _BidWinHomeShellState extends State<BidWinHomeShell> {
                 HomePageScreen(
                   onNavigateToAccount: () {
                     _pageController.animateToPage(
-                      2,
+                      3,
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOut,
                     );
@@ -90,9 +91,17 @@ class _BidWinHomeShellState extends State<BidWinHomeShell> {
                       curve: Curves.easeInOut,
                     );
                   },
+                  onNavigateToActivity: () {
+                    _pageController.animateToPage(
+                      2,
+                      duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOut,
+                    );
+                  },
                 ), // Swipe right from feed
                 const HomeFeedScreen(), // Default feed screen
-                const UserActivityScreen(), // Swipe left from feed
+                const ActivityScreen(), // Activity screen
+                const UserActivityScreen(), // Swipe left from feed (Account)
               ],
             ),
             // Only show page indicators on feed and activity screens (not on home page)
@@ -104,7 +113,7 @@ class _BidWinHomeShellState extends State<BidWinHomeShell> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
-                    3,
+                    4,
                     (index) => AnimatedContainer(
                       duration: const Duration(milliseconds: 250),
                       margin: const EdgeInsets.symmetric(horizontal: 6),

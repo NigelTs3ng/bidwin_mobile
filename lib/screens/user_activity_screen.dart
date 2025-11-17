@@ -10,208 +10,214 @@ class UserActivityScreen extends StatefulWidget {
 }
 
 class _UserActivityScreenState extends State<UserActivityScreen> {
-  int _selectedTab = 0;
   int _bidCoins = 1250; // TODO: fetch bidCoins from Supabase
   bool _hasLinkedCard = false; // TODO: check if card is linked from Supabase
-
-  final List<Map<String, String>> _myBids = [
-    {
-      'title': 'Vintage Comic Collection',
-      'status': 'Leading',
-      'amount': '\$180.00',
-      'date': 'Nov 10, 2025',
-    },
-    {
-      'title': 'Rare Trading Card Pack',
-      'status': 'Outbid',
-      'amount': '\$92.50',
-      'date': 'Nov 9, 2025',
-    },
-  ];
-
-  final List<Map<String, String>> _myPurchases = [
-    {
-      'title': 'Limited Art Print #204',
-      'status': 'Shipped',
-      'amount': '\$340.00',
-      'date': 'Nov 4, 2025',
-    },
-    {
-      'title': 'Collector\'s Vinyl Set',
-      'status': 'Delivered',
-      'amount': '\$129.00',
-      'date': 'Oct 31, 2025',
-    },
-  ];
-
-  final List<Map<String, String>> _myRaffles = [
-    {
-      'title': 'Luxury Getaway Weekend',
-      'status': 'Pending Draw',
-      'amount': '3 tickets',
-      'date': 'Nov 12, 2025',
-    },
-    {
-      'title': 'Gaming Rig Bundle',
-      'status': 'Won',
-      'amount': '1 ticket',
-      'date': 'Nov 1, 2025',
-    },
-  ];
+  double _referralBalance = 0.00; // TODO: fetch from Supabase
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final tabContent = <int, List<Map<String, String>>>{
-      0: _myBids,
-      1: _myPurchases,
-      2: _myRaffles,
-    };
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
+    return Scaffold(
+      backgroundColor: BidWinTheme.darkBackground,
+      body: SafeArea(
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'My BidWin',
-                style: theme.textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+              // Profile section at top
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: BidWinTheme.cardBackground,
+                      child: const Text(
+                        'n',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          fontSize: 24,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                'nigelt71178',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.keyboard_arrow_down,
+                                color: Colors.white70,
+                                size: 20,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: BidWinTheme.blue,
-                    child: const Text(
-                      'BW',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+              const SizedBox(height: 16),
+              // BidCoin wallet section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _PaymentCardSection(
+                  bidCoins: _bidCoins,
+                  hasLinkedCard: _hasLinkedCard,
+                  onLinkCard: () {
+                    // TODO: integrate Stripe for credit card linking
+                    showDialog(
+                      context: context,
+                      builder: (context) => _LinkCardDialog(
+                        onLink: () {
+                          setState(() {
+                            _hasLinkedCard = true;
+                          });
+                          Navigator.of(context).pop();
+                        },
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '@bidwin_user',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        'Level 3 Seller • 128 followers',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.white70,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Container(
-            decoration: BoxDecoration(
-              color: BidWinTheme.cardBackground,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: Row(
-              children: [
-                for (var index = 0; index < 3; index++)
-                  Expanded(
-                    child: _ActivityTabButton(
-                      label: switch (index) {
-                        0 => 'My Bids',
-                        1 => 'My Purchases',
-                        _ => 'My Raffles',
-                      },
-                      selected: _selectedTab == index,
-                      onTap: () => setState(() => _selectedTab = index),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _PaymentCardSection(
-            bidCoins: _bidCoins,
-            hasLinkedCard: _hasLinkedCard,
-            onLinkCard: () {
-              // TODO: integrate Stripe for credit card linking
-              showDialog(
-                context: context,
-                builder: (context) => _LinkCardDialog(
-                  onLink: () {
-                    setState(() {
-                      _hasLinkedCard = true;
-                    });
-                    Navigator.of(context).pop();
+                    );
                   },
                 ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-        Expanded(
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 250),
-            child: _ActivityListView(
-              key: ValueKey(_selectedTab),
-              entries: tabContent[_selectedTab] ?? const <Map<String, String>>[],
-            ),
-          ),
-        ),
-        // TODO: fetch user activity (bids/purchases/raffles) from Supabase
-      ],
-    );
-  }
-}
-
-class _ActivityTabButton extends StatelessWidget {
-  const _ActivityTabButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(18),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          color: selected ? BidWinTheme.blue : Colors.transparent,
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: selected ? Colors.white : Colors.white70,
+              ),
+              const SizedBox(height: 16),
+              // View Profile button
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () {
+                      // TODO: Navigate to profile page
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'View Profile',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
                 ),
+              ),
+              const SizedBox(height: 24),
+              // Account heading
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Account',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Two cards side by side
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _AccountCard(
+                        icon: Icons.people,
+                        title: 'Referrals & Credits',
+                        subtitle: 'Balance: US\$${_referralBalance.toStringAsFixed(2)}',
+                        onTap: () {
+                          // TODO: Navigate to referrals page
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _AccountCard(
+                        icon: Icons.workspace_premium,
+                        title: 'My Rewards',
+                        subtitle: 'View Coupons',
+                        onTap: () {
+                          // TODO: Navigate to rewards page
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Account settings list
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  children: [
+                    _AccountListItem(
+                      icon: Icons.people,
+                      title: 'Affiliate Program: Earn Cash',
+                      onTap: () {
+                        // TODO: Navigate to affiliate program
+                      },
+                    ),
+                    _AccountListItem(
+                      icon: Icons.payment,
+                      title: 'Payments & Shipping',
+                      onTap: () {
+                        // TODO: Navigate to payments & shipping
+                      },
+                    ),
+                    _AccountListItem(
+                      icon: Icons.location_on,
+                      title: 'Addresses',
+                      onTap: () {
+                        // TODO: Navigate to addresses
+                      },
+                    ),
+                    _AccountListItem(
+                      icon: Icons.verified,
+                      title: 'Verified Buyer',
+                      onTap: () {
+                        // TODO: Navigate to verification
+                      },
+                    ),
+                    _AccountListItem(
+                      icon: Icons.notifications,
+                      title: 'Notifications',
+                      onTap: () {
+                        // TODO: Navigate to notifications
+                      },
+                    ),
+                    _AccountListItem(
+                      icon: Icons.email,
+                      title: 'Change Email',
+                      onTap: () {
+                        // TODO: Navigate to change email
+                      },
+                    ),
+                    _AccountListItem(
+                      icon: Icons.lock,
+                      title: 'Change Password',
+                      onTap: () {
+                        // TODO: Navigate to change password
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -219,85 +225,102 @@ class _ActivityTabButton extends StatelessWidget {
   }
 }
 
-class _ActivityListView extends StatelessWidget {
-  const _ActivityListView({
-    super.key,
-    required this.entries,
+class _AccountCard extends StatelessWidget {
+  const _AccountCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
   });
 
-  final List<Map<String, String>> entries;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    if (entries.isEmpty) {
-      return Center(
-        child: Text(
-          'No activity yet.',
-          style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white54),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: BidWinTheme.cardBackground,
+          borderRadius: BorderRadius.circular(16),
         ),
-      );
-    }
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              icon,
+              color: Colors.white,
+              size: 28,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: Colors.white54,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-      itemCount: entries.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final entry = entries[index];
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: BidWinTheme.cardBackground,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                entry['title'] ?? '',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
+class _AccountListItem extends StatelessWidget {
+  const _AccountListItem({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: Colors.white,
+              size: 24,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                title,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Chip(
-                    label: Text(
-                      entry['status'] ?? '',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    backgroundColor: Colors.white10,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    entry['amount'] ?? '',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    entry['date'] ?? '',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.white54,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: Colors.white70,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -337,10 +360,19 @@ class _PaymentCardSection extends StatelessWidget {
                   color: BidWinTheme.blue.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
-                  Icons.account_balance_wallet,
-                  color: BidWinTheme.blue,
-                  size: 24,
+                child: Image.asset(
+                  'lib/assets/images/BidCoin-logo.png',
+                  width: 24,
+                  height: 24,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    // Fallback to icon if image fails to load
+                    return const Icon(
+                      Icons.account_balance_wallet,
+                      color: BidWinTheme.blue,
+                      size: 24,
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: 12),
@@ -573,4 +605,3 @@ class _LinkCardDialogState extends State<_LinkCardDialog> {
     );
   }
 }
-

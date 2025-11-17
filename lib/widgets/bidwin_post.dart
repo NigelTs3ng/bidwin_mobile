@@ -416,6 +416,8 @@ class _BuyNowSliderState extends State<_BuyNowSlider>
   late Animation<double> _snapBackAnimation;
   double _sliderPosition = 0.0;
   bool _isCompleted = false;
+  final GlobalKey _pillKey = GlobalKey();
+  double? _pillWidth;
 
   @override
   void initState() {
@@ -434,12 +436,25 @@ class _BuyNowSliderState extends State<_BuyNowSlider>
         });
       }
     });
+    // Measure pill width after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _measurePillWidth();
+    });
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  void _measurePillWidth() {
+    final RenderBox? box = _pillKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box != null && mounted) {
+      setState(() {
+        _pillWidth = box.size.width;
+      });
+    }
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
@@ -451,21 +466,37 @@ class _BuyNowSliderState extends State<_BuyNowSlider>
       _controller.reset();
     }
 
-    final RenderBox? box = context.findRenderObject() as RenderBox?;
-    if (box == null) return;
+    final RenderBox? containerBox = context.findRenderObject() as RenderBox?;
+    if (containerBox == null) return;
     
-    final double width = box.size.width;
+    final double containerWidth = containerBox.size.width;
     final double delta = details.delta.dx;
     
-    // Calculate thumb width dynamically (approximate based on content)
-    final thumbWidth = 200.0; // Approximate width of the yellow pill
+    // Use measured pill width or fallback to a reasonable estimate
+    final pillWidth = _pillWidth ?? 180.0;
+    
+    // Calculate max position (allowing pill to reach the very end)
+    final maxPosition = containerWidth - pillWidth;
 
     setState(() {
-      _sliderPosition = (_sliderPosition + delta).clamp(0.0, width - thumbWidth);
+      _sliderPosition = (_sliderPosition + delta).clamp(0.0, maxPosition);
       
-      // Check if slider reached the end (with some threshold)
-      if (_sliderPosition >= width - thumbWidth - 10) {
+      // More forgiving threshold for mobile - trigger when 80% of the way
+      final threshold = maxPosition * 0.8;
+      if (_sliderPosition >= threshold && maxPosition > 0) {
         _isCompleted = true;
+        // Animate to the end before triggering
+        _animateToEnd(containerWidth - pillWidth);
+      }
+    });
+  }
+
+  void _animateToEnd(double endPosition) {
+    _snapBackAnimation = Tween<double>(begin: _sliderPosition, end: endPosition).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    _controller.forward(from: 0.0).then((_) {
+      if (mounted) {
         _handleBuyNow();
       }
     });
@@ -557,27 +588,6 @@ class _BuyNowSliderState extends State<_BuyNowSlider>
       ),
       child: Stack(
         children: [
-          // Background chevrons (visible when slider is not covering)
-          Positioned.fill(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Icon(
-                    Icons.chevron_right,
-                    color: Colors.white.withOpacity(0.3),
-                    size: 18,
-                  ),
-                  Icon(
-                    Icons.chevron_right,
-                    color: Colors.white.withOpacity(0.3),
-                    size: 18,
-                  ),
-                ],
-              ),
-            ),
-          ),
           // Slider thumb (yellow pill with text and price)
           Positioned(
             left: _sliderPosition,
@@ -587,7 +597,9 @@ class _BuyNowSliderState extends State<_BuyNowSlider>
               onPanUpdate: _onPanUpdate,
               onPanEnd: _onPanEnd,
               child: Container(
+                key: _pillKey,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
+                constraints: const BoxConstraints(minWidth: 140),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFEB3B),
                   borderRadius: BorderRadius.circular(16),
@@ -597,11 +609,13 @@ class _BuyNowSliderState extends State<_BuyNowSlider>
                   ),
                 ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'Buy Now',
@@ -616,20 +630,6 @@ class _BuyNowSliderState extends State<_BuyNowSlider>
                             color: Colors.black87,
                             fontSize: 11,
                           ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.chevron_right,
-                          color: Colors.black,
-                          size: 18,
-                        ),
-                        Icon(
-                          Icons.chevron_right,
-                          color: Colors.black,
-                          size: 18,
                         ),
                       ],
                     ),
